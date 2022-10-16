@@ -6,9 +6,8 @@ import 'package:panelafer/cuibt/states.dart';
 import '../../cuibt/cuibt.dart';
 
 class ShowPhoto extends StatelessWidget {
-  String url;
 
-   ShowPhoto({Key? key,required this.url }) : super(key: key);
+   ShowPhoto({Key? key,}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +15,7 @@ class ShowPhoto extends StatelessWidget {
       (
       listener: (context,state){},
       builder: (context,state){
+        var cuibt= AfeerCuibt.get(context);
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
@@ -28,11 +28,13 @@ class ShowPhoto extends StatelessWidget {
             ),
             elevation: 0,
           ),
-body: SizedBox(
-  height: double.maxFinite,
-  width: double.maxFinite,
-  child: Image.network(url,fit: BoxFit.cover,),
-),
+body: Expanded(
+  child: ListView.separated(itemBuilder: (context,i)=>SizedBox(
+    height: 500,
+    width: 300,
+    child: Image.network(cuibt.photos[i].linkPhoto!,fit: BoxFit.fill,),
+  ),separatorBuilder: (context,i)=>const SizedBox(height: 20), itemCount: cuibt.photos.length),
+)
         );
       },
     );

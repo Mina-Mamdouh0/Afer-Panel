@@ -6,7 +6,7 @@ import 'package:panelafer/Compoands/widget.dart';
 import 'package:panelafer/cuibt/states.dart';
 import 'package:panelafer/screen/showScreens/show_exam.dart';
 
-import '../cuibt/cuibt.dart';
+import '../../cuibt/cuibt.dart';
 
 class DetailsLectureScreen extends StatefulWidget {
   String nameSubject = "";
@@ -29,7 +29,6 @@ class _DetailsLectureScreenState extends State<DetailsLectureScreen> {
   String? nameLecture;
   bool isAdd = true;
   var titleController = TextEditingController();
-  var nodesController = TextEditingController();
   bool isEdit = false;
   @override
   Widget build(BuildContext context) {
@@ -272,6 +271,9 @@ class _DetailsLectureScreenState extends State<DetailsLectureScreen> {
                                     return null;
                                   },
                                 ),
+                              const SizedBox(
+                                height: 10,
+                              ),
                               TextFormField(
                                 controller: titleController,
                                 keyboardType: TextInputType.text,
@@ -286,9 +288,11 @@ class _DetailsLectureScreenState extends State<DetailsLectureScreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 10,),
+                              const SizedBox(
+                                height: 10,
+                              ),
                               TextFormField(
-                                controller: nodesController,
+                                controller:cuibt. notesController,
                                 keyboardType: TextInputType.text,
                                 maxLines: 6,
                                 decoration: const InputDecoration(
@@ -302,6 +306,16 @@ class _DetailsLectureScreenState extends State<DetailsLectureScreen> {
                                   return null;
                                 },
                               ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              myButton(height: 50.0, width: 150.0, text: "upload note",onPressed: ()=>cuibt.uploadNotes(         academicYear: cuibt.selectedYear,
+        semester: cuibt.selectedSemester,
+        subjectName: nameSubject!,
+        nameLecture: nameLecture!,
+        context: context,
+                              notes: cuibt.notesController.text,)
+                              )
                             ],
                           )
                         : Wrap(
@@ -369,7 +383,6 @@ class _DetailsLectureScreenState extends State<DetailsLectureScreen> {
                               )
                             ],
                           )),
-
               ],
             ),
           ),
@@ -421,4 +434,3 @@ Widget lectureModel(
     ),
   );
 }
-

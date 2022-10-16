@@ -1,8 +1,10 @@
-
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:panelafer/Compoands/widget.dart';
-import 'package:uuid/uuid.dart';
+import 'package:panelafer/cuibt/states.dart';
+
+import '../cuibt/cuibt.dart';
 
 class CreateBarCode extends StatefulWidget {
   const CreateBarCode({Key? key}) : super(key: key);
@@ -12,12 +14,12 @@ class CreateBarCode extends StatefulWidget {
 }
 
 class _CreateBarCodeState extends State<CreateBarCode> {
-
-  bool isShowBarCode=false;
-  var controller=TextEditingController();
-  String uID='';
   @override
   Widget build(BuildContext context) {
+    return BlocConsumer<AfeerCuibt, AfeerState>(
+  listener: (context, state) {
+  },
+  builder: (context, state) {
     return Material(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -29,7 +31,7 @@ class _CreateBarCodeState extends State<CreateBarCode> {
               alignment: Alignment.center,
               child: Text(
                 'BARCODE',
-                style:  TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
                   color: Colors.blue,
@@ -40,10 +42,10 @@ class _CreateBarCodeState extends State<CreateBarCode> {
             const SizedBox(
               height: 10,
             ),
-             Column(
+            Column(
               children: [
                 myTextField(
-                    controller: controller,
+                    controller: AfeerCuibt.get(context).controller,
                     hint: 'Add Price',
                     onTap: () {},
                     keyboardType: TextInputType.text),
@@ -51,34 +53,51 @@ class _CreateBarCodeState extends State<CreateBarCode> {
                   height: 20,
                 ),
 
-                myButton(
-                    text: 'Create',
-                    width: 600.0,
-                    height: 50.0,
-                    onPressed: () {
-                      setState(() {
-                        isShowBarCode=true;
-                        uID=const Uuid().v4();
+             Row(
+               children: [
+                 Expanded(
+                   child: myButton(
+                              text: 'Create',
+                              width: 600.0,
+                              height: 50.0,
+                              onPressed: () {
+                                AfeerCuibt.get(context).createNewBarCode();
+                              }),
+                 ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                 Expanded(
+                   child: myButton(
+                       text: 'Create premium qr',
+                       width: 600.0,
+                       height: 50.0,
+                       onPressed: () {
+                         AfeerCuibt.get(context).createPremiumCode();
+                       }),
+                 ),
+               ],
+             ),
 
-                      });
-                    }),
                 const SizedBox(
                   height: 20,
                 ),
-                isShowBarCode?
+        AfeerCuibt.get(context).isShowBarCode?
                 BarcodeWidget(
-                  data:'$uID${controller.text}',
+                  data: '${AfeerCuibt.get(context).uID} ${AfeerCuibt.get(context).controller.text}',
                   barcode: Barcode.qrCode(),
                   color: Colors.black,
                   height: 250,
                   width: 250,
                 )
-                    :Container()
+                    : Container()
               ],
             )
           ],
         ),
       ),
     );
+  },
+);
   }
 }

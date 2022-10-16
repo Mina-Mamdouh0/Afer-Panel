@@ -3,6 +3,7 @@ class SubjectInfo {
   String? id;
   String? teacherName;
   String? urlPhotoTeacher;
+  String? academicYear;
 
   SubjectInfo(
       {
@@ -10,6 +11,7 @@ class SubjectInfo {
         this.id,
         this.teacherName,
         this.urlPhotoTeacher,
+        this.academicYear,
        });
   SubjectInfo.fromJson(Map<String, dynamic> json)
   {
@@ -17,6 +19,7 @@ class SubjectInfo {
     id = json['id'];
     teacherName = json['teacherName'];
     urlPhotoTeacher = json['urlPhotoTeacher'];
+    academicYear = json['AcademicYear'];
   }
   Map<String, dynamic> toJson()
   {
@@ -25,6 +28,7 @@ class SubjectInfo {
       'id': id,
       'teacherName': teacherName,
       'urlPhotoTeacher': urlPhotoTeacher,
+      'AcademicYear': academicYear,
 
     };
   }

@@ -7,6 +7,7 @@ import 'package:panelafer/screen/create_barcode.dart';
 import 'package:panelafer/screen/group_screen.dart';
 
 import '../Compoands/constant_strings.dart';
+import 'auth/edit_access.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isFourthGroup = false;
   bool createEmail = false;
   bool createBarCode = false;
+  bool editAccess = false;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             isThirdGroup = false;
                             isFourthGroup = false;
                             createBarCode = false;
+                            editAccess = false;
                           });
                         },
                         child: const Text(
@@ -83,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             isFourthGroup = false;
                             createEmail = false;
                             createBarCode = false;
+                            editAccess = false;
                           });
                         },
                         child: const Text(
@@ -105,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             isFourthGroup = false;
                             createEmail = false;
                             createBarCode = false;
+                            editAccess = false;
                           });
                         },
                         child: const Text(
@@ -127,6 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             isFourthGroup = true;
                             createEmail = false;
                             createBarCode = false;
+
+                            editAccess = false;
                           });
                         },
                         child: const Text(
@@ -149,10 +156,37 @@ class _HomeScreenState extends State<HomeScreen> {
                               isFourthGroup = false;
                               createEmail = true;
                               createBarCode = false;
+
+                              editAccess = false;
                             });
                           },
                           child: const Text(
                             'Create email',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold),
+                          )),
+                    if (cuibt.userModule!.isAdmin!)
+                      const SizedBox(
+                        height: 10,
+                      ),
+                    if (cuibt.userModule!.isAdmin!)
+                      TextButton(
+                          onPressed: () {
+                            setState(() {
+                              cuibt.selectedYear = years[3];
+                              isFirstGroup = false;
+                              isSecondGroup = false;
+                              isThirdGroup = false;
+                              isFourthGroup = false;
+                              createEmail = false;
+                              createBarCode = false;
+                              editAccess = true;
+                            });
+                          },
+                          child: const Text(
+                            'Edit Access',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,
@@ -174,12 +208,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                         child: const Text(
-                          'Create BarCode',
+                          'Create Bar Code',
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 25,
                               fontWeight: FontWeight.bold),
                         )),
+
                   ],
                 ),
               ),
@@ -193,10 +228,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               : isFourthGroup
                                   ? const GroupScreen(groupName: 'Fourth Group')
                                   : createEmail
-                                      ? const SignUp():
-                                     createBarCode
-                                         ? const CreateBarCode()
-                                         : const Center())
+                                      ? const SignUp()
+                                      : createBarCode
+                                          ? const CreateBarCode()
+                                          : editAccess?const EditAccess():Container()),
             ],
           ),
         );

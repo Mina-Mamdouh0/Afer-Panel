@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:panelafer/Compoands/widget.dart';
 import 'package:panelafer/res/photo_manger.dart';
-import 'package:panelafer/screen/auth/forget_passwprd.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../cuibt/cuibt.dart';
@@ -126,12 +125,12 @@ class Login extends StatelessWidget {
                               onPressed: () => cuibt.loginUser(context),
                             ),
                             const SizedBox(height: 15),
-                            TextButton(
+                  /*          TextButton(
                                 onPressed: () {navigator(context: context,returnPage: true,page:  ForgetPassword());},
                                 child: const Text(
                                   "Forgot Password?",
                                   style: TextStyle(color: Colors.grey),
-                                )),
+                                )),*/
                           ],
                         ),
                       ),

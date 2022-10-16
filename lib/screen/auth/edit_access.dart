@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:panelafer/cuibt/cuibt.dart';
-import 'package:panelafer/cuibt/states.dart';
+import 'package:panelafer/Module/user_module.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../Compoands/constant_strings.dart';
 import '../../Compoands/widget.dart';
+import '../../cuibt/cuibt.dart';
+import '../../cuibt/states.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+class EditAccess extends StatefulWidget {
+  const EditAccess({Key? key}) : super(key: key);
 
   @override
-  State<SignUp> createState() => _SignUpState();
+  State<EditAccess> createState() => _EditAccessState();
 }
 
-class _SignUpState extends State<SignUp> {
+class _EditAccessState extends State<EditAccess> {
   @override
   void initState() {
-    AfeerCuibt.get(context).getAllSubject(
-        academicYear: AfeerCuibt.get(context).selectedYear,
-        semester: AfeerCuibt.get(context).selectedSubjectSemester);
+    AfeerCuibt.get(context).getAllUser();
     super.initState();
   }
 
@@ -40,7 +39,7 @@ class _SignUpState extends State<SignUp> {
               title: Shimmer.fromColors(
                   baseColor: Colors.black,
                   highlightColor: Colors.white,
-                  child: const Text("sign up",
+                  child: const Text("Edit Access",
                       style: TextStyle(
                           fontSize: 30, fontWeight: FontWeight.w700))),
             ),
@@ -52,6 +51,9 @@ class _SignUpState extends State<SignUp> {
                     key: cuibt.signUpFormKey,
                     child: Column(
                       children: [
+                        const SizedBox(
+                          height: 50,
+                        ),
                         SizedBox(
                           height: size.height * 0.15,
                           width: size.width * 0.9,
@@ -67,32 +69,47 @@ class _SignUpState extends State<SignUp> {
                           ),
                         ),
                         const SizedBox(
-                          height: 10,
+                          height: 20,
                         ),
-                        myTextField(
-                          controller: cuibt.nameControllerSignUp,
-                          hint: "name",
-                          auto: true,
-                          prefix: const Icon(
-                            Icons.person,
-                            color: Colors.black,
+                        Container(
+                          clipBehavior: Clip.antiAliasWithSaveLayer,
+                          height: 50,
+                          width: size.width * .8,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25.0),
+                              border:
+                                  Border.all(color: Colors.black, width: 2)),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton(
+                              alignment: Alignment.center,
+
+                              items: cuibt.users.map((e) {
+                                return DropdownMenuItem(
+                                  alignment: Alignment.center,
+                                  onTap: () {
+                                    cuibt.subjectUser = e;
+                                    cuibt.emailControllerSignUp.text = e.email!;
+                                    cuibt.passwordControllerSignUp.text =
+                                        e.pass ?? "";
+                                  },
+                                  value: e.uid.toString(),
+                                  child: Text("   ${e.name!}"),
+                                );
+                              }).toList(),
+                              onChanged: (Object? value) {
+                                cuibt.changeValue(value);
+                              },
+                              value: cuibt.storeValue,
+                            ),
                           ),
-                          label: "user name",
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value.isEmpty) {
-                              return "Please enter name";
-                            }
-                            return null;
-                          },
                         ),
                         const SizedBox(
-                          height: 15,
+                          height: 20,
                         ),
                         myTextField(
+                          enabled: false,
                           controller: cuibt.emailControllerSignUp,
                           hint: "Email",
-                          auto: true,
                           prefix: const Icon(
                             Icons.email,
                             color: Colors.black,
@@ -110,20 +127,15 @@ class _SignUpState extends State<SignUp> {
                           height: 15,
                         ),
                         myTextField(
+                          enabled: false,
                           controller: cuibt.passwordControllerSignUp,
                           hint: "password",
                           label: "Password",
-                          obscureText: cuibt.isObscure,
+                          obscureText: false,
                           prefix: const Icon(
                             Icons.lock,
                             color: Colors.black,
                           ),
-                          suffix: IconButton(
-                              onPressed: () =>
-                                  cuibt.togglePasswordVisibility(),
-                              icon: cuibt.isObscure
-                                  ? const Icon(Icons.visibility_off)
-                                  : const Icon(Icons.visibility)),
                           keyboardType: TextInputType.visiblePassword,
                           validator: (value) {
                             if (value.isEmpty) {
@@ -131,7 +143,6 @@ class _SignUpState extends State<SignUp> {
                             }
                             return null;
                           },
-
                         ),
                         const SizedBox(
                           height: 5,
@@ -139,8 +150,9 @@ class _SignUpState extends State<SignUp> {
                         Expanded(
                             child: ListView.separated(
                                 itemBuilder: (context, i) => myCheckBox(
-                                    name: cuibt.subjects[i].name,
-                                    value: cuibt.checkAccess(cuibt.subjects[i].name!),
+                                    name: cuibt.subjects[i].name!,
+                                    value: cuibt
+                                        .checkAccess(cuibt.subjects[i].name!),
                                     index: i,
                                     cuibt: cuibt),
                                 separatorBuilder: (context, _) =>
@@ -151,9 +163,16 @@ class _SignUpState extends State<SignUp> {
                         ),
                         myButton(
                           height: size.height * .06,
-                          width: size.width * .06,
-                          text: "Sign up",
-                          onPressed: () => cuibt.createNewUser(context),
+                          width: size.width * .09,
+                          text: "Edit all access",
+                          onPressed: () => cuibt.updateNewUser(UserModule(
+                            uid: cuibt.subjectUser.uid,
+                            pass: cuibt.subjectUser.pass,
+                            email: cuibt.subjectUser.email,
+                            access: cuibt.accessSubject,
+                            name: cuibt.subjectUser.name,
+                            isAdmin: false,
+                          )),
                         ),
                         const SizedBox(height: 15),
                       ],
@@ -209,9 +228,9 @@ class _SignUpState extends State<SignUp> {
                   child: Text(
                     "$title",
                     style: const TextStyle(
-                        color: Colors.black, fontWeight: FontWeight.w900,fontSize: 12
-
-                    ),
+                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12),
                   ),
                 ),
               ),

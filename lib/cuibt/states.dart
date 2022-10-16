@@ -33,3 +33,12 @@ class SecureDataSuccessfully extends AfeerState{}
 class SecureDataFailed extends AfeerState{}
 class ForgetPasswordSuccessfully extends AfeerState{}
 class ForgetPasswordFailed extends AfeerState{}
+class CreateNewBarCodeSuccessfully extends AfeerState{}
+class CreateNewBarCodeFailed extends AfeerState{}
+class DeleteSubjectSuccessfully extends AfeerState{}
+class DeleteSubjectFailed extends AfeerState{}
+class DeleteLectureFailed extends AfeerState{}
+class GetAllUserSuccessfully extends AfeerState{}
+class GetAllUserFailed extends AfeerState{}
+class ChangeValueSuccessfully extends AfeerState{}
+

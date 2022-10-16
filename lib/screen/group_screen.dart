@@ -14,8 +14,13 @@ class GroupScreen extends StatefulWidget {
 }
 
 class _GroupScreenState extends State<GroupScreen> {
-  bool isAdd = true;
-  bool isEdit = false;
+  bool isAdd = false;
+  bool isEdit = true;
+  @override
+  void initState() {
+AfeerCuibt.get(context).getAllSubject(academicYear:AfeerCuibt.get(context).selectedYear , semester: AfeerCuibt.get(context).selectedSemester);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AfeerCuibt, AfeerState>(listener: (context, state) {
@@ -44,22 +49,23 @@ class _GroupScreenState extends State<GroupScreen> {
               ),
               Row(
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            isAdd = true;
-                            isEdit = false;
-                          });
-                        },
-                        child: const Text(
-                          'Add',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
-                        )),
-                  ),
+                  if (AfeerCuibt.get(context).userModule!.isAdmin!)
+                    Expanded(
+                      child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              isAdd = true;
+                              isEdit = false;
+                            });
+                          },
+                          child: const Text(
+                            'Add',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
+                          )),
+                    ),
                   const SizedBox(
                     width: 10,
                   ),
@@ -140,6 +146,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                 subjectName: cuibt.subjectNameController.text,
                                 teacherName: cuibt.teacherNameController.text,
                                 photoUrl: cuibt.photoUrl,
+                                context: context,
                               );
                             })
                       ],
@@ -201,11 +208,11 @@ class _GroupScreenState extends State<GroupScreen> {
       {required String nameSubject,
       required String nameTeacher,
       required String urlPhoto,
-      required BuildContext context
-      }) {
+      required BuildContext context}) {
     return InkWell(
-      onTap: ()  {
-        if(AfeerCuibt.get(context).checkAccess(nameSubject)||AfeerCuibt.get(context).userModule!.isAdmin!) {
+      onTap: () {
+        if (AfeerCuibt.get(context).checkAccess(nameSubject) ||
+            AfeerCuibt.get(context).userModule!.isAdmin!) {
           navigator(
               returnPage: true,
               context: context,
@@ -214,40 +221,105 @@ class _GroupScreenState extends State<GroupScreen> {
               ));
         }
       },
-      child: Container(
-        margin: const EdgeInsets.all(10),
-        padding: const EdgeInsets.all(10),
-        height: 200,
-        width: 200,
-        decoration: BoxDecoration(
-
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.grey[300],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
+      child: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
+            height: 220,
+            width: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey[300],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(urlPhoto),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  nameSubject,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  nameTeacher,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          if (AfeerCuibt.get(context).userModule!.isAdmin!)
             CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage(urlPhoto),
-            ),
-            const SizedBox(
-              width: 10,
-            ),
-            Text(
-              nameSubject,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Text(
-              nameTeacher,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+                radius: 20,
+                backgroundColor: Colors.grey[700],
+                child: IconButton(
+                    onPressed: () => showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 25,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            elevation: 10,
+                            content: const Text(
+                              'Im Sure Delete Item',
+                              style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  )),
+                              TextButton(
+                                  onPressed: () {
+                                    AfeerCuibt.get(context)
+                                        .deleteSubject(nameSubject);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text(
+                                    'Ok',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  )),
+                            ],
+                          );
+                        }),
+                    icon: const Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                    )))
+        ],
       ),
     );
   }

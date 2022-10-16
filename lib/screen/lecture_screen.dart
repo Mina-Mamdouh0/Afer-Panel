@@ -5,11 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:panelafer/Compoands/widget.dart';
 import 'package:panelafer/cuibt/cuibt.dart';
 import 'package:panelafer/cuibt/states.dart';
-import 'package:panelafer/screen/details_lecture_screen.dart';
+import 'package:panelafer/screen/showScreens/details_lecture_screen.dart';
 
 class LectureScreen extends StatefulWidget {
-  String nameSubject="";
-
+  String nameSubject = "";
 
   LectureScreen({Key? key, required this.nameSubject}) : super(key: key);
 
@@ -83,7 +82,10 @@ class _LectureScreenState extends State<LectureScreen> {
                     Expanded(
                       child: ElevatedButton(
                           onPressed: () {
-                            cuibt.getAllLecture(academicYear: cuibt.selectedYear, semester: cuibt.selectedSemester, subjectName: nameSubject!);
+                            cuibt.getAllLecture(
+                                academicYear: cuibt.selectedYear,
+                                semester: cuibt.selectedSemester,
+                                subjectName: nameSubject!);
                             setState(() {
                               isAdd = false;
                               isEdit = true;
@@ -128,11 +130,10 @@ class _LectureScreenState extends State<LectureScreen> {
                                 width: 300.0,
                                 height: 50.0,
                                 onPressed: () => cuibt.addNewLecture(
-                               academicYear: cuibt.selectedYear,
-                                  semester: cuibt.selectedSemester,
-                                  subjectName: nameSubject!,
-                                )
-                            )
+                                      academicYear: cuibt.selectedYear,
+                                      semester: cuibt.selectedSemester,
+                                      subjectName: nameSubject!,
+                                    ))
                           ],
                         )
                       : GridView.builder(
@@ -165,51 +166,126 @@ class _LectureScreenState extends State<LectureScreen> {
   }
 }
 
-
 Widget lectureModel(
     {required String nameLecture,
-      required String descLecture,
-      required String nameSubject,
-      required BuildContext context}) {
+    required String descLecture,
+    required String nameSubject,
+    required BuildContext context}) {
   return InkWell(
     onTap: () => navigator(
-        returnPage: true, context: context, page:  DetailsLectureScreen(nameSubject:nameSubject,nameLecture: nameLecture,)),
-    child: Container(
-      margin: const EdgeInsets.all(10),
-      padding: const EdgeInsets.all(10),
-      height: 200,
-      width: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.grey[300],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.grey,
-            child:  Text(nameSubject,style:const TextStyle(fontSize: 20,color:  Colors.white),),
+        returnPage: true,
+        context: context,
+        page: DetailsLectureScreen(
+          nameSubject: nameSubject,
+          nameLecture: nameLecture,
+        )),
+    child: Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
+          height: 300,
+          width: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.grey[300],
           ),
-          const SizedBox(
-            width: 10,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.grey,
+                child: Text(
+                  nameSubject,
+                  style: const TextStyle(fontSize: 20, color: Colors.white),
+                ),
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(
+                nameLecture,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Text(
+                descLecture,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
           ),
-          Text(
-            nameLecture,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Text(
-            descLecture,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ],
-      ),
+        ),
+        CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.grey[700],
+            child: IconButton(
+                onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text(
+                          'Delete',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        elevation: 10,
+                        content: const Text(
+                          'Im Sure Delete Item',
+                          style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              )),
+                          TextButton(
+                              onPressed: () {
+                                AfeerCuibt.get(context).deleteLecture(
+                                    subjectName: nameSubject,
+                                    academicYear:
+                                        AfeerCuibt.get(context).selectedYear,
+                                    nameLecture: nameLecture);
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Ok',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              )),
+                        ],
+                      );
+                    }),
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                )))
+      ],
     ),
   );
 }

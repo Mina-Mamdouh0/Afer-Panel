@@ -12,6 +12,7 @@ import 'package:panelafer/Module/video.dart';
 import 'package:panelafer/Module/photo_moudle.dart';
 import 'package:panelafer/cuibt/states.dart';
 import 'package:panelafer/screen/home_screen.dart';
+import 'package:uuid/uuid.dart';
 import '../Module/exam.dart';
 import '../Module/pdf.dart';
 import '../Module/subject_Info.dart';
@@ -29,17 +30,25 @@ class AfeerCuibt extends Cubit<AfeerState> {
 
   static AfeerCuibt get(context) => BlocProvider.of(context);
   Photo? photoInfo;
+  List<Photo> photos = [];
   Video? videoInfo;
   Pdf? pdfInfo;
   List<Question> questions = [];
   Uint8List? bytes;
   List<ModelLecture> listLecture = [];
+  String uID = '';
+  bool isShowBarCode = false;
+  var notesController = TextEditingController();
+  List<UserModule> users = [];
+  var storeValue;
+  UserModule subjectUser = UserModule();
 //Login Var
   var emailControllerLogin = TextEditingController();
   var passwordControllerLogin = TextEditingController();
   var loginFormKey = GlobalKey<FormState>();
   bool isObscure = true;
   UserModule? userModule;
+
   //Signup Var
   var emailControllerSignUp = TextEditingController();
   var passwordControllerSignUp = TextEditingController();
@@ -47,21 +56,29 @@ class AfeerCuibt extends Cubit<AfeerState> {
   var signUpFormKey = GlobalKey<FormState>();
   List<bool> access = [false, false, false, false, false];
   Map<String, bool> accessSubject = {};
+
   // variable for add subject screen
   var subjectNameController = TextEditingController();
   var teacherNameController = TextEditingController();
   String photoUrl = '';
   String selectedYear = "First Year";
-  String selectedSemester = "First semester";
-  String selectedSubjectSemester = "First semester";
+  String selectedSemester =
+      DateTime.now().month >= 9 ? "First semester" : "Second semester";
+
+  String selectedSubjectSemester =
+      DateTime.now().month >= 9 ? "First semester" : "Second semester";
+
   List<SubjectInfo> subjects = [];
+
   // variable for add lecture screen
   var lectureNameController = TextEditingController();
   var lectureDescriptionController = TextEditingController();
+
   // variable for add video screen
   bool isPaid = false;
   var priceController = TextEditingController();
   bool uploadLoading = false;
+
 //set the access of subject to account
   void setAccess(int index, bool value, String subject) {
     if (value == false) {
@@ -91,6 +108,7 @@ class AfeerCuibt extends Cubit<AfeerState> {
       email: email,
       access: access,
       uid: uid,
+      pass: pass,
     );
     Firestore.instance
         .collection("Admin Users")
@@ -108,7 +126,6 @@ class AfeerCuibt extends Cubit<AfeerState> {
     FirebaseAuth.instance
         .signUp(emailControllerSignUp.text, passwordControllerSignUp.text)
         .then((value) {
-      Navigator.pop(context);
       createUserProfile(
         email: emailControllerSignUp.text,
         name: nameControllerSignUp.text,
@@ -116,6 +133,19 @@ class AfeerCuibt extends Cubit<AfeerState> {
         pass: passwordControllerSignUp.text,
         access: accessSubject,
       );
+    }).catchError((onError) {
+      print(onError);
+      emit(CreateUserFailed());
+    });
+  }
+
+  void updateNewUser(UserModule user) {
+    Firestore.instance
+        .collection("Admin Users")
+        .document(user.uid!)
+        .update(user.toJson())
+        .then((value) {
+      emit(CreateUserSuccessfully());
     }).catchError((onError) {
       emit(CreateUserFailed());
     });
@@ -174,15 +204,24 @@ class AfeerCuibt extends Cubit<AfeerState> {
     required String subjectName,
     required String teacherName,
     required String photoUrl,
+    required BuildContext context,
+
   }) {
     Random random2 = Random.secure();
     var randomNumber2 = random2.nextInt(200);
     SubjectInfo? subject = SubjectInfo(
-      name: subjectName,
-      id: "$academicYear$semester$subjectName$randomNumber2",
-      teacherName: teacherNameController.text,
-      urlPhotoTeacher: photoUrl,
-    );
+        name: subjectName,
+        id: "$academicYear$semester$subjectName$randomNumber2",
+        teacherName: teacherNameController.text,
+        urlPhotoTeacher: photoUrl,
+        academicYear: academicYear);
+
+if(subjects.any((element) => element.name== subjectName&&element.academicYear==academicYear&&element.teacherName==teacherName)){
+  MotionToast.error(
+      title: const Text("Error"),
+      description: const Text("This subject is already exist"))
+      .show(context);
+}else {
     Firestore.instance
         .collection("Academic year")
         .document(academicYear)
@@ -197,6 +236,8 @@ class AfeerCuibt extends Cubit<AfeerState> {
     }).catchError((onError) {
       emit(CreateSubjectFailed());
     });
+}
+
   }
 
   void addNewLecture({
@@ -345,7 +386,7 @@ class AfeerCuibt extends Cubit<AfeerState> {
       description: description,
       linkPhoto: linkPhoto,
       point: priceController.text,
-      id: "$academicYear$semester$subjectName$nameLecture${linkPhoto.substring(15, 20)}",
+      id: "$academicYear$semester$subjectName$nameLecture${Uuid().v4()}",
     );
     _dataReference(
             academicYear: academicYear,
@@ -517,31 +558,31 @@ class AfeerCuibt extends Cubit<AfeerState> {
               .child("pdf/$subjectName/$nameLecture/$description")
               .putData(pdf)
               .then((value) {
-                if(value.state == TaskState.success) {
-                  value.ref.getDownloadURL().then((value) {
-                    Navigator.pop(context);
-                    uploadNewPdf(
-                        academicYear: academicYear,
-                        semester: semester,
-                        subjectName: subjectName,
-                        linkPdf: value,
-                        description: description,
-                        nameLecture: nameLecture);
-                  });
-                } else {
-                  Navigator.pop(context);
-                  MotionToast.error(
-                    description: const Text(
-                      "Upload Failed",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    title: const Text(
-                      "Error",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ).show(context);
-                  emit(UploadPdfFailed());
-                }
+            if (value.state == TaskState.success) {
+              value.ref.getDownloadURL().then((value) {
+                Navigator.pop(context);
+                uploadNewPdf(
+                    academicYear: academicYear,
+                    semester: semester,
+                    subjectName: subjectName,
+                    linkPdf: value,
+                    description: description,
+                    nameLecture: nameLecture);
+              });
+            } else {
+              Navigator.pop(context);
+              MotionToast.error(
+                description: const Text(
+                  "Upload Failed",
+                  style: TextStyle(color: Colors.white),
+                ),
+                title: const Text(
+                  "Error",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ).show(context);
+              emit(UploadPdfFailed());
+            }
             //upload video link to firebase
           }).catchError((onError) {
             Navigator.pop(context);
@@ -588,35 +629,34 @@ class AfeerCuibt extends Cubit<AfeerState> {
               .putData(photo)
               .then((value) {
             //upload video link to firebase
-            if(value.state==TaskState.success){
-                  Navigator.pop(context);
-                  value.ref.getDownloadURL().then((value) {
-                    uploadNewPhoto(
-                      academicYear: academicYear,
-                      semester: semester,
-                      subjectName: subjectName,
-                      linkPhoto: value,
-                      description: description,
-                      nameLecture: nameLecture,
-                    );
-                  }).catchError((onError) {
-                    emit(UploadPhotoFailed());
-                  });
-
-                }
+            if (value.state == TaskState.success) {
+              Navigator.pop(context);
+              value.ref.getDownloadURL().then((value) {
+                uploadNewPhoto(
+                  academicYear: academicYear,
+                  semester: semester,
+                  subjectName: subjectName,
+                  linkPhoto: value,
+                  description: description,
+                  nameLecture: nameLecture,
+                );
+              }).catchError((onError) {
+                emit(UploadPhotoFailed());
+              });
+            }
           }).catchError((onError) {
-Navigator.pop(context);
-MotionToast.error(
-  description: const Text(
-    "Upload Failed",
-    style: TextStyle(color: Colors.white),
-  ),
-  title: const Text(
-    "Error",
-    style: TextStyle(color: Colors.white),
-  ),
-).show(context);
-emit(UploadPhotoFailed());
+            Navigator.pop(context);
+            MotionToast.error(
+              description: const Text(
+                "Upload Failed",
+                style: TextStyle(color: Colors.white),
+              ),
+              title: const Text(
+                "Error",
+                style: TextStyle(color: Colors.white),
+              ),
+            ).show(context);
+            emit(UploadPhotoFailed());
           });
         }).catchError((onError) {
           emit(UploadPhotoFailed());
@@ -624,7 +664,8 @@ emit(UploadPhotoFailed());
     }
   }
 
-  void uploadPhotoTeacher({required String nameTeacher,required BuildContext context}) async {
+  void uploadPhotoTeacher(
+      {required String nameTeacher, required BuildContext context}) async {
     OpenFilePicker()
       ..filterSpecification = {
         'jpg': '*.jpg',
@@ -636,21 +677,20 @@ emit(UploadPhotoFailed());
       ..title = 'Select a photo'
       ..getFile()!.readAsBytes().then((photo) {
         showLoaderDialog(context);
-
         FirebaseStorage.instance
-          .ref()
-          .child("photoTeacher/$nameTeacher")
-          .putData(photo)
-          .then((value) {
-          value.ref
-              .getDownloadURL()
-              .then((url) {
+            .ref()
+            .child("photoTeacher/$nameTeacher")
+            .putData(photo)
+            .then((value) {
+          value.ref.getDownloadURL().then((url) {
+            Navigator.pop(context);
             photoUrl = url;
             emit(UploadTeacherPhotoSuccessfully());
-            }).catchError((onError) {
-        emit(UploadTeacherPhotoFailed());
-      });});
-    } );
+          }).catchError((onError) {
+            emit(UploadTeacherPhotoFailed());
+          });
+        });
+      });
   }
 
   void getPhoto(
@@ -667,15 +707,20 @@ emit(UploadPhotoFailed());
             type: "photo")
         .get()
         .then((value) {
-      photoInfo = Photo.fromJson(value.last.map);
-      navigator(
-          returnPage: true,
-          context: context,
-          page: ShowPhoto(
-            url: photoInfo!.linkPhoto!,
-          ));
+      photos = List.generate(
+          value.length, (index) => Photo.fromJson(value[index].map));
+      navigator(returnPage: true, context: context, page: ShowPhoto());
       emit(GetPhotoSuccessfully());
     }).catchError((onError) {
+      MotionToast.error(
+          description: const Text(
+            "not found photo ",
+            style: TextStyle(color: Colors.white),
+          ),
+          title: const Text(
+            "Error",
+            style: TextStyle(color: Colors.white),
+          )).show(context);
       emit(GetPhotoFailed());
     });
   }
@@ -687,6 +732,9 @@ emit(UploadPhotoFailed());
     required String nameLecture,
     required BuildContext context,
   }) {
+    showLoaderDialog(
+      context,
+    );
     _dataReference(
             academicYear: academicYear,
             semester: semester,
@@ -696,6 +744,7 @@ emit(UploadPhotoFailed());
         .get()
         .then((value) {
       videoInfo = Video.fromJson(value.last.map);
+      Navigator.pop(context);
       navigator(
           returnPage: true,
           context: context,
@@ -704,9 +753,16 @@ emit(UploadPhotoFailed());
           ));
       emit(GetVideoSuccessfully());
     }).catchError((onError) {
-      if (kDebugMode) {
-        print(onError.toString());
-      }
+      Navigator.pop(context);
+      MotionToast.error(
+          description: const Text(
+            "not found video ",
+            style: TextStyle(color: Colors.white),
+          ),
+          title: const Text(
+            "Error",
+            style: TextStyle(color: Colors.white),
+          )).show(context);
       emit(GetVideoFailed());
     });
   }
@@ -727,21 +783,32 @@ emit(UploadPhotoFailed());
         .get()
         .then((value) async {
       pdfInfo = Pdf.fromJson(value.last.map);
+      showLoaderDialog(
+        context,
+      );
       bytes = await InternetFile.get(
         pdfInfo!.linkPdf!,
         progress: (receivedLength, contentLength) {
           final percentage = receivedLength / contentLength * 100;
-          showLoaderDialog(context, );
-          if(percentage == 100){
+
+          if (percentage == 100) {
             Navigator.pop(context);
-            navigator(returnPage: true, context: context, page: const ShowPdf());
+            navigator(
+                returnPage: true, context: context, page: const ShowPdf());
           }
-
         },
-
       );
       emit(GetPdfSuccessfully());
     }).catchError((onError) {
+      MotionToast.error(
+          description: const Text(
+            "not found pdf ",
+            style: TextStyle(color: Colors.white),
+          ),
+          title: const Text(
+            "Error",
+            style: TextStyle(color: Colors.white),
+          )).show(context);
       emit(GetPdfFailed());
     });
   }
@@ -877,6 +944,8 @@ emit(UploadPhotoFailed());
     });
   }
 
+  var controller = TextEditingController();
+
   showLoaderDialog(BuildContext context) {
     AlertDialog alert = AlertDialog(
       backgroundColor: Colors.transparent,
@@ -904,5 +973,106 @@ emit(UploadPhotoFailed());
         return alert;
       },
     );
+  }
+
+  void createNewBarCode() {
+    uID = const Uuid().v4();
+    isShowBarCode = true;
+    Firestore.instance
+        .collection("qrcode")
+        .document("$uID ${controller.text}")
+        .set({"uid": "$uID ${controller.text}"})
+        .then((value) => emit(CreateNewBarCodeSuccessfully()))
+        .catchError((onError) => emit(CreateNewBarCodeFailed()));
+  }
+  void createPremiumCode() {
+    uID = "Prm ${const Uuid().v4()}";
+    isShowBarCode = true;
+    Firestore.instance
+        .collection("qrcode")
+        .document("$uID ${controller.text}")
+        .set({"uid": "$uID ${controller.text}"})
+        .then((value) => emit(CreateNewBarCodeSuccessfully()))
+        .catchError((onError) => emit(CreateNewBarCodeFailed()));
+  }
+
+  void uploadNotes({
+    required String academicYear,
+    required String semester,
+    required String subjectName,
+    required String nameLecture,
+    required BuildContext context,
+    required String notes,
+  }) {
+    _dataReference(
+            academicYear: academicYear,
+            semester: semester,
+            subjectName: subjectName,
+            nameLecture: nameLecture,
+            type: "notes")
+        .document(nameLecture + subjectName)
+        .set({"notes": notes}).then((value) {
+      notesController.clear();
+    }).catchError((onError) {
+      Navigator.pop(context);
+      MotionToast.error(
+          description: const Text(
+            "Error in upload notes",
+            style: TextStyle(color: Colors.white),
+          ),
+          title: const Text(
+            "Error",
+            style: TextStyle(color: Colors.white),
+          )).show(context);
+      emit(GetVideoFailed());
+    });
+  }
+
+  void deleteSubject(String subjectName) {
+    Firestore.instance
+        .collection("Academic year")
+        .document(selectedYear)
+        .collection(selectedSemester)
+        .document(subjectName)
+        .delete()
+        .then((value) => getAllSubject(
+              academicYear: selectedYear,
+              semester: selectedSemester,
+            ))
+        .catchError((onError) => emit(DeleteSubjectFailed()));
+  }
+
+  void deleteLecture({
+    required String academicYear,
+    required String subjectName,
+    required String nameLecture,
+  }) {
+    Firestore.instance
+        .collection("Academic year")
+        .document(academicYear)
+        .collection(selectedSemester)
+        .document(subjectName)
+        .collection("Lecture")
+        .document(nameLecture)
+        .delete()
+        .then((value) => getAllLecture(
+            academicYear: academicYear,
+            semester: selectedSemester,
+            subjectName: subjectName))
+        .catchError((onError) => emit(DeleteLectureFailed()));
+  }
+
+  void getAllUser() {
+    Firestore.instance.collection("Admin Users").get().then((value) {
+      users = List.generate(
+          value.length, (index) => UserModule.fromJson(value[index].map));
+      emit(GetAllUserSuccessfully());
+    }).catchError((onError) => emit(GetAllUserFailed()));
+  }
+
+  void changeValue(value) {
+    storeValue = value;
+
+    emit(ChangeValueSuccessfully());
   }
 }
